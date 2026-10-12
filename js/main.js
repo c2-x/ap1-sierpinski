@@ -10,6 +10,9 @@ window.onload = function () {
 
     UI.init();
 
+    // 点云长满后由渲染器通知 UI 更新状态文字
+    Renderer.onGrowthComplete = function () { window.UI_syncGrowthDone(); };
+
     Interaction.attach(canvas, {
         onModeChange: function (m) { window.UI_setMode(m); },
         onPauseToggle: function (animating) { window.UI_syncPause(animating); }

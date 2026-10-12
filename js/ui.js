@@ -27,7 +27,10 @@ const UI = (function () {
             lineIndices = sub.lineIndices;
         }
         colors = Gasket.makeColors(positions.length / 2, params.scheme);
-        Renderer.setData(positions, colors, lineIndices);
+        Renderer.setData(positions, colors, lineIndices, params.mode);
+        // 新数据从头生长，状态文字复位
+        const ps = $("pause-state");
+        if (ps) ps.textContent = params.mode === "points" ? "生长中" : "—";
     }
 
     function $(id) { return document.getElementById(id); }
@@ -90,6 +93,10 @@ const UI = (function () {
         window.UI_setMode = setMode;
         window.UI_syncPause = function (animating) {
             $("pause-state").textContent = animating ? "生长中" : "已暂停";
+        };
+        // 渲染器长满时调用：状态改为"已完成"
+        window.UI_syncGrowthDone = function () {
+            $("pause-state").textContent = "生长完成";
         };
 
         syncRows();

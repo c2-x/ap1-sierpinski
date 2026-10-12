@@ -49,10 +49,12 @@ const Renderer = (function () {
     }
 
     // 上传一组顶点数据（positions: Float32Array，colors: Float32Array）
-    function setData(positions, colors, lineIndices) {
+    // mode: "points" | "wireframe" | "solid"，决定这一批数据用哪种图元绘制
+    function setData(positions, colors, lineIndices, mode) {
         data.positions = positions;
         data.colors = colors;
         data.lineIndices = lineIndices || null;
+        data.mode = mode;    // 关键：渲染模式必须随数据一起同步
         data.shownCount = 0; // 新数据从头开始生长
 
         gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
