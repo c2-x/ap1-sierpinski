@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AP1 · 交互式 2D 分形 — Sierpinski 垫片</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: #14161c;
+            color: #ddd;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #gl-canvas {
+            flex: 1;
+            display: block;
+            cursor: grab;
+        }
+
+        #gl-canvas:active {
+            cursor: grabbing;
+        }
+
+        #panel {
+            width: 250px;
+            padding: 16px;
+            background: #1d2029;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.4);
+            overflow-y: auto;
+        }
+
+        #panel h1 {
+            font-size: 16px;
+            margin: 0 0 4px;
+        }
+
+        #panel h2 {
+            font-size: 13px;
+            margin: 18px 0 6px;
+            color: #8ab4f8;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+        }
+
+        .row {
+            margin: 8px 0;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select,
+        button {
+            background: #2a2e3a;
+            color: #ddd;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 4px 6px;
+        }
+
+        input[type="range"] {
+            width: 120px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #888;
+            line-height: 1.7;
+        }
+
+        #pause-state {
+            color: #7ee787;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gl-canvas" width="900" height="700"></canvas>
+
+    <div id="panel">
+        <h1>Sierpinski 垫片 · AP1</h1>
+
+        <h2>渲染模式</h2>
+        <div class="row">
+            <label for="mode-select">模式</label>
+            <select id="mode-select">
+                <option value="points">点云（混沌游戏）</option>
+                <option value="wireframe">线框（递归细分）</option>
+                <option value="solid">实体（递归细分）</option>
+            </select>
+        </div>
+
+        <div class="row" id="count-row">
+            <label for="point-count">顶点数</label>
+            <span>
+                <input type="range" id="point-count" min="1000" max="50000" step="1000" value="5000">
+                <span id="point-count-val">5000</span>
+            </span>
+        </div>
+
+        <div class="row" id="gon-row">
+            <label for="ngon">多边形边数 (E1)</label>
+            <select id="ngon">
+                <option value="3" selected>3（三角形）</option>
+                <option value="4">4</option>
+                <option value="5">5（五边形）</option>
+                <option value="6">6（六边形）</option>
+                <option value="8">8</option>
+            </select>
+        </div>
+
+        <div class="row" id="depth-row" style="display:none">
+            <label for="depth">递归深度</label>
+            <span>
+                <input type="range" id="depth" min="0" max="6" step="1" value="4">
+                <span id="depth-val">4</span>
+            </span>
+        </div>
+
+        <h2>外观</h2>
+        <div class="row">
+            <label for="point-size">点大小</label>
+            <span>
+                <input type="range" id="point-size" min="1" max="10" step="0.5" value="2">
+                <span id="point-size-val">2.0</span>
+            </span>
+        </div>
+        <div class="row">
+            <label for="scheme">配色方案</label>
+            <select id="scheme">
+                <option value="red">火焰红</option>
+                <option value="cyan">海洋青</option>
+                <option value="rainbow">彩虹渐变</option>
+            </select>
+        </div>
+
+        <h2>操作</h2>
+        <div class="row">
+            <button id="reset-view">重置视图</button>
+            <span>生长状态：<span id="pause-state">生长中</span></span>
+        </div>
+        <p class="hint">
+            鼠标左键拖动：平移<br>
+            滚轮：以光标为中心缩放<br>
+            键 1 / 2 / 3：切换点云 / 线框 / 实体<br>
+            空格：暂停 / 继续逐点生长
+        </p>
+    </div>
+
+    <!-- 着色器源码（initShaders 按 id 从 <script> 标签读取） -->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec2 a_position;
+        attribute vec3 a_color;
+        uniform vec2 u_offset;
+        uniform float u_scale;
+        uniform float u_pointSize;
+        varying vec3 v_color;
+
+        void main() {
+            vec2 p = (a_position + u_offset) * u_scale;
+            gl_Position = vec4(p, 0.0, 1.0);
+            gl_PointSize = u_pointSize;
+            v_color = a_color;
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec3 v_color;
+
+        void main() {
+            gl_FragColor = vec4(v_color, 1.0);
+        }
+    </script>
+
+    <!-- 教材配套工具库 + 项目模块（按依赖顺序加载） -->
+    <script src="Common/webgl-utils.js"></script>
+    <script src="Common/initShaders.js"></script>
+    <script src="Common/MV.js"></script>
+    <script src="js/gasket.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/interaction.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
