@@ -1,5 +1,7 @@
 # AP1 · 交互式 2D 分形 — Sierpinski 垫片
 
+**在线演示（公网 URL）：[https://c2-x.github.io/ap1-sierpinski/](https://c2-x.github.io/ap1-sierpinski/)**
+
 课程项目（Angel & Shreiner, *Interactive Computer Graphics*, 8th ed., Ch2–3）。
 原生 WebGL 2.0 + JavaScript，使用教材配套工具库风格（`Common/` 下 `initShaders.js` / `MV.js` / `webgl-utils.js`），无构建步骤。
 
